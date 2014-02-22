@@ -2,14 +2,16 @@ import logging
 import asyncore
 import socket
 import redis
-import ipasn_redis as ipasn
+import sys
+sys.path.append('../lib/ipasn-redis-1.0/ipasn/redis/')
+import api as ipasn
 import argparse
 
 argParser = argparse.ArgumentParser(description='Whois server for ipasn history')
 argParser.add_argument('-v', action='store_true', help='DEBUG logs activated')
 argParser.add_argument('-l', action='store_true', help='Log queries along with source IP address and TCP port')
 argParser.add_argument('-b', type=str, default="0.0.0.0", help='Binding address (default: 0.0.0.0)')
-argParser.add_argument('-p', type=int, default=4343, help='TCP port (default: 4343)')
+argParser.add_argument('-p', type=int, default=43, help='TCP port (default: 43)')
 args = argParser.parse_args()
 
 if args.v:
@@ -67,13 +69,9 @@ class IPASNHandler(asyncore.dispatcher):
                 self.close()
 
             val = ""
-            single=True
 
             for first_date, last_date, asn, block in ipasn.aggregate_history(iplookup):
-                    val = first_date+"|"+last_date+"|"+asn+"|"+block+"|"+iplookup
-                    if not single:
-                        val = val+"\n"
-                    single=False
+                    val = val+first_date+"|"+last_date+"|"+asn+"|"+block+"|"+iplookup+"\n"
 
             sent = self.send(val)
 
